@@ -1,12 +1,26 @@
 import { Meteor } from 'meteor/meteor';
 import { Random } from 'meteor/random';
-import { check } from 'meteor/check';
+import { check, Match } from 'meteor/check';
+import { createHash } from 'node:crypto';
 import { Devices } from '../../db';
 import { generateDefaultDeviceName } from './device-name';
 
+const hashCredential = credential => credential && createHash('sha256').update(credential).digest('hex');
+
 Meteor.methods({
 	'Device': async function(d) {
-		check(d, {deviceId: String, screenSize: Object, locationUrl: String, isStandalone: Boolean});
+		check(d, {
+			deviceId: String,
+			screenSize: Object,
+			locationUrl: String,
+			isStandalone: Boolean,
+			nativeCredential: Match.Maybe(String),
+		});
+		const nativeCredentialHash = hashCredential(d.nativeCredential);
+		const existing = await Devices.findOneAsync(d.deviceId);
+		if (existing?.nativeCredentialHash && existing.nativeCredentialHash !== nativeCredentialHash) {
+			throw new Meteor.Error('device-auth', 'Native device credential does not match');
+		}
 
 		if (d.deviceId === 'codex') {
 			if (Meteor.isDevelopment) {
@@ -32,6 +46,7 @@ Meteor.methods({
 				'code': Random.id(4).toUpperCase(),
 				'ip': getIpFromConnection(this.connection),
 				'isOnline': true,
+				nativeCredentialHash,
 			},
 			$inc: {'totalConnections': 1},
 			$setOnInsert: {

@@ -10,12 +10,14 @@ export const deviceId = (() => {
 	return localStorage.deviceId || (localStorage.deviceId = Random.id());
 })();
 
-Meteor.startup(() => {
+Meteor.startup(async () => {
+	const nativeCredential = window.GohanoTerminal && await window.GohanoTerminal.credential();
 	Meteor.call('Device', {
 		'deviceId': deviceId,
 		'screenSize': {'width': screen.width, 'height': screen.height},
 		'locationUrl': location.href,
 		isStandalone,
+		nativeCredential,
 	}, (err, res) => {
 		if (err) return toast(err.reason);
 		if (res.deviceId === 'codex' && res.userId) Accounts.connection.setUserId(res.userId);
