@@ -14,6 +14,7 @@ Package.onUse(api => {
 	api.use('check');
 	api.use('react-meteor-data', 'client');
 	api.use('poon', 'client');
-	api.mainModule('client.js', 'client');
-	api.mainModule('server.js', 'server');
+	api.use('poon-api', 'server');
+	api.mainModule('client/index.js', 'client');
+	api.mainModule('server/index.js', 'server');
 });
