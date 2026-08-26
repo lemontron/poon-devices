@@ -2,7 +2,7 @@ import { Meteor } from 'meteor/meteor';
 import { Random } from 'meteor/random';
 import { check } from 'meteor/check';
 import { api } from 'meteor/poon-api';
-import { Devices } from '../db';
+import { deviceQuietFields, Devices } from '../db';
 import { generateDefaultDeviceName } from './device-name';
 import { getIpFromConnection } from './util';
 
@@ -61,5 +61,8 @@ Meteor.publish('Device', async function(d) {
 		},
 	});
 
-	return Devices.find({'_id': d.deviceId});
+	// Omits noisy fields!
+	return Devices.find({'_id': d.deviceId}, {
+		fields: deviceQuietFields,
+	});
 });
