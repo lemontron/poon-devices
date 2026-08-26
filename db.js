@@ -11,4 +11,5 @@ export const deviceQuietFields = {
 	'name': 1,
 	'lanId': 1,
 	'isHub': 1,
+	'imageId': 1,
 };
