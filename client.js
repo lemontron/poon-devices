@@ -38,4 +38,4 @@ export const useDevice = () => useTracker(() => {
 	});
 }, [deviceId]);
 
-export { Devices };
+export { Devices, deviceQuietFields };
