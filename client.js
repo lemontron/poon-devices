@@ -4,28 +4,33 @@ import { Tracker } from 'meteor/tracker';
 import { useTracker } from 'meteor/react-meteor-data';
 import { isStandalone } from 'meteor/poon';
 import { deviceQuietFields, Devices } from './db';
+import { createCachedDeviceQuery } from './device-cache';
 
 export const deviceId = (() => {
 	if (navigator.userAgent.includes('Codex')) return 'codex';
 	return localStorage.deviceId || (localStorage.deviceId = Random.id());
 })();
 
-const sub = Meteor.subscribe('Device', {
+const findDevice = createCachedDeviceQuery(deviceId);
+
+Meteor.subscribe('Device', {
 	'deviceId': deviceId,
 	'screenSize': {'width': screen.width, 'height': screen.height},
 	'locationUrl': location.href,
 	isStandalone,
 }, () => {
 	setInterval(async () => {
-		await fetch(`/api/heartbeat/${deviceId}`);
+		try {
+			await fetch(`/api/heartbeat/${deviceId}`);
+		} catch (err) {}
 	}, 10000);
 });
 
 // promise for startup services
 export const deviceReady = new Promise(resolve => {
-	const computation = Tracker.autorun(() => {
-		const device = Devices.findOne(deviceId);
-		if (!sub.ready() || !device) return;
+	Tracker.autorun(computation => {
+		const device = findDevice();
+		if (!device) return;
 
 		computation.stop();
 		resolve(device);
@@ -33,9 +38,7 @@ export const deviceReady = new Promise(resolve => {
 });
 
 export const useDevice = () => useTracker(() => {
-	return Devices.findOne(deviceId, {
-		fields: deviceQuietFields,
-	});
+	return findDevice({fields: deviceQuietFields});
 }, [deviceId]);
 
 export { Devices, deviceQuietFields };
