@@ -1,3 +1,3 @@
 import './devices';
 
-export { Devices } from '../db';
+export { Devices, deviceQuietFields } from '../db';

@@ -2,7 +2,7 @@ import { Meteor } from 'meteor/meteor';
 import { Random } from 'meteor/random';
 import { Tracker } from 'meteor/tracker';
 import { useTracker } from 'meteor/react-meteor-data';
-import { isStandalone } from 'meteor/poon';
+import { isPwa } from 'meteor/poon';
 import { deviceQuietFields, Devices } from './db';
 import { createCachedDeviceQuery } from './device-cache';
 
@@ -14,10 +14,10 @@ export const deviceId = (() => {
 const findDevice = createCachedDeviceQuery(deviceId);
 
 Meteor.subscribe('Device', {
-	'deviceId': deviceId,
+	deviceId,
 	'screenSize': {'width': screen.width, 'height': screen.height},
 	'locationUrl': location.href,
-	isStandalone,
+	'isStandalone': isPwa,
 }, () => {
 	setInterval(async () => {
 		try {
@@ -26,12 +26,10 @@ Meteor.subscribe('Device', {
 	}, 10000);
 });
 
-// promise for startup services
 export const deviceReady = new Promise(resolve => {
 	Tracker.autorun(computation => {
 		const device = findDevice();
 		if (!device) return;
-
 		computation.stop();
 		resolve(device);
 	});
