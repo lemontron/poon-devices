@@ -23,9 +23,7 @@ api.get('/heartbeat/:device', async (req, res) => {
 const setIsOnlineAsync = (deviceId, isOnline) => Devices.updateAsync({
 	'_id': deviceId,
 	'isOnline': !isOnline,
-}, {
-	$set: {'isOnline': isOnline},
-});
+}, {$set: {'isOnline': isOnline}});
 
 export const bumpHeartbeat = async (deviceId, isInitial) => {
 	clearTimeout(timers[deviceId]);
