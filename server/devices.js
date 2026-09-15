@@ -6,12 +6,6 @@ import { generateDefaultDeviceName } from './device-name';
 import { getIpFromConnection } from './util';
 import { bumpHeartbeat } from './heartbeat';
 
-Meteor.methods({
-	'Test': function() {
-		return this.connection.deviceId;
-	},
-});
-
 Meteor.publish('Device', async function(d) {
 	check(d, {deviceId: String, screenSize: Object, locationUrl: String, isStandalone: Boolean});
 

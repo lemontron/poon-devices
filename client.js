@@ -7,7 +7,7 @@ import { deviceQuietFields, Devices } from './db';
 import { createCachedDeviceQuery } from './device-cache';
 
 export const deviceId = (() => {
-	if (navigator.userAgent.includes('Codex')) return 'codex';
+	if (Meteor.isDevelopment && '__codexWebMcpModelContext' in window) return 'codex';
 	return localStorage.deviceId || (localStorage.deviceId = Random.id());
 })();
 
