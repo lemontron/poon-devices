@@ -14,5 +14,4 @@ export const deviceQuietFields = {
 	'storeId': 1,
 	'isHub': 1,
 	'imageId': 1,
-	'stripeReader': 1,
 };
