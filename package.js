@@ -6,7 +6,6 @@ Package.describe({
 
 Package.onUse(api => {
 	api.use('ecmascript');
-	api.use('ejson', 'client');
 	api.use('meteor');
 	api.use('modules');
 	api.use('mongo');

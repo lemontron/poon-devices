@@ -1,17 +1,10 @@
-import { EJSON } from 'meteor/ejson';
+import { storage } from 'meteor/poon';
 import { Devices } from './db';
 
-const getFromStorage = () => {
-	const saved = localStorage.device;
-	if (saved) return EJSON.parse(saved);
-};
-
-const saveToStorage = (device) => {
-	localStorage['device'] = EJSON.stringify(device);
-};
+const saveToStorage = device => storage.device = device;
 
 export const createCachedDeviceQuery = deviceId => {
-	const cached = getFromStorage();
+	const cached = storage.device;
 	Devices.find(deviceId).observe({
 		'added': saveToStorage,
 		'changed': saveToStorage,

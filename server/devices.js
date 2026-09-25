@@ -7,7 +7,13 @@ import { getIpFromConnection } from './util';
 import { bumpHeartbeat } from './heartbeat';
 
 Meteor.publish('Device', async function(d) {
-	check(d, {deviceId: String, screenSize: Object, locationUrl: String, isStandalone: Boolean});
+	check(d, {
+		deviceId: String,
+		publicKey: {crv: String, ext: Boolean, key_ops: [String], kty: String, x: String, y: String},
+		screenSize: Object,
+		locationUrl: String,
+		isStandalone: Boolean,
+	});
 
 	if (d.deviceId === 'codex' && !Meteor.isDevelopment) {
 		throw new Meteor.Error('development', 'Codex device only allowed in development mode');
@@ -27,6 +33,7 @@ Meteor.publish('Device', async function(d) {
 			'ip': getIpFromConnection(this.connection),
 			'isStandalone': d.isStandalone,
 			'isOnline': true,
+			'publicKey': d.publicKey, // codex stop touching this
 		},
 		$setOnInsert: {
 			'addedOn': date,

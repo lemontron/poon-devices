@@ -5,6 +5,7 @@ import { useTracker } from 'meteor/react-meteor-data';
 import { isPwa } from 'meteor/poon';
 import { deviceQuietFields, Devices } from './db';
 import { createCachedDeviceQuery } from './device-cache';
+import { getPublicKeyAsync } from './device-keys';
 
 export const deviceId = (() => {
 	if (Meteor.isDevelopment && '__codexWebMcpModelContext' in window) return 'codex';
@@ -13,17 +14,20 @@ export const deviceId = (() => {
 
 const findDevice = createCachedDeviceQuery(deviceId);
 
-Meteor.subscribe('Device', {
-	deviceId,
-	'screenSize': {'width': screen.width, 'height': screen.height},
-	'locationUrl': location.href,
-	'isStandalone': isPwa,
-}, () => {
-	setInterval(async () => {
-		try {
-			await fetch(`/api/heartbeat/${deviceId}`);
-		} catch (err) {}
-	}, 10000);
+Meteor.startup(async () => {
+	Meteor.subscribe('Device', {
+		deviceId,
+		'publicKey': await getPublicKeyAsync(),
+		'screenSize': {'width': screen.width, 'height': screen.height},
+		'locationUrl': location.href,
+		'isStandalone': isPwa,
+	}, () => {
+		setInterval(async () => {
+			try {
+				await fetch(`/api/heartbeat/${deviceId}`);
+			} catch (err) {}
+		}, 10000);
+	});
 });
 
 export const deviceReady = new Promise(resolve => {
@@ -40,3 +44,4 @@ export const useDevice = () => useTracker(() => {
 }, [deviceId]);
 
 export { Devices, deviceQuietFields };
+export { signAsync } from './device-keys';
