@@ -1,7 +1,7 @@
 import { Meteor } from 'meteor/meteor';
 import { Random } from 'meteor/random';
 import { check } from 'meteor/check';
-import { deviceQuietFields, Devices } from '../db';
+import { Devices } from '../db';
 import { generateDefaultDeviceName } from './device-name';
 import { getIpFromConnection } from './util';
 import { bumpHeartbeat } from './heartbeat';
@@ -43,5 +43,5 @@ Meteor.publish('Device', async function(d) {
 	});
 	await bumpHeartbeat(d.deviceId, true);
 
-	return Devices.find(d.deviceId, {fields: deviceQuietFields});
+	return Devices.find(d.deviceId);
 });

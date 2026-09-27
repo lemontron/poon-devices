@@ -3,7 +3,7 @@ import { Random } from 'meteor/random';
 import { Tracker } from 'meteor/tracker';
 import { useTracker } from 'meteor/react-meteor-data';
 import { isPwa } from 'meteor/poon';
-import { deviceQuietFields, Devices } from './db';
+import { Devices } from './db';
 import { createCachedDeviceQuery } from './device-cache';
 import { getPublicKeyAsync } from './device-keys';
 
@@ -40,8 +40,8 @@ export const deviceReady = new Promise(resolve => {
 });
 
 export const useDevice = () => useTracker(() => {
-	return findDevice({fields: deviceQuietFields});
+	return findDevice();
 }, [deviceId]);
 
-export { Devices, deviceQuietFields };
+export { Devices };
 export { signAsync } from './device-keys';

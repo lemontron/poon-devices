@@ -17,6 +17,7 @@ export const getPublicKeyAsync = async () => {
 export const signAsync = async message => {
 	await keysReady;
 	const signer = await crypto.subtle.importKey('jwk', storage.privateKey, alg, false, ['sign']);
-	const signature = await crypto.subtle.sign({'name': 'ECDSA', 'hash': 'SHA-256'}, signer, new TextEncoder().encode(message));
+	const payload = new TextEncoder().encode(message);
+	const signature = await crypto.subtle.sign({'name': 'ECDSA', 'hash': 'SHA-256'}, signer, payload);
 	return btoa(String.fromCharCode(...new Uint8Array(signature)));
 };
