@@ -23,7 +23,7 @@ Meteor.publish('Device', async function(d) {
 	const date = new Date();
 	await Devices.upsertAsync({'_id': d.deviceId}, {
 		$set: {
-			'userId': this.userId,
+			'userId': this.userId || undefined,
 			'updatedOn': date,
 			'activeOn': date,
 			'isDevelopment': Meteor.isDevelopment,
