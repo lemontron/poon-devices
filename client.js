@@ -30,6 +30,17 @@ Meteor.startup(async () => {
 	});
 });
 
+let displayScaling = 1;
+Tracker.autorun(() => {
+	const device = findDevice({fields: {displayScaling: 1}});
+	if (device.displayScaling && device.displayScaling !== displayScaling) {
+		const width = Math.round(screen.width / device.displayScaling);
+		const viewport = document.querySelector('meta[name="viewport"]');
+		viewport.content = `width=${width}, initial-scale=${device.displayScaling}, maximum-scale=${device.displayScaling}, user-scalable=no, viewport-fit=cover`;
+		displayScaling = device.displayScaling;
+	}
+});
+
 export const deviceReady = new Promise(resolve => {
 	Tracker.autorun(computation => {
 		const device = findDevice();
