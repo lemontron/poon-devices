@@ -35,33 +35,36 @@ export const deviceRegistered = new Promise(resolve => {
 });
 
 let displayScaling = 1;
-Tracker.autorun(() => {
-	const device = findDevice({displayScaling: 1});
-	if (device.displayScaling && device.displayScaling !== displayScaling) {
-		const width = Math.round(screen.width / device.displayScaling);
-		const viewport = document.querySelector('meta[name="viewport"]');
-		viewport.content = `width=${width}, initial-scale=${device.displayScaling}, maximum-scale=${device.displayScaling}, user-scalable=no, viewport-fit=cover`;
-		displayScaling = device.displayScaling;
-	}
-});
+Meteor.startup(() => {
+	Tracker.autorun(() => {
+		const device = findDevice({displayScaling: 1});
+		if (device.displayScaling && device.displayScaling !== displayScaling) {
+			const width = Math.round(screen.width / device.displayScaling);
+			const viewport = document.querySelector('meta[name="viewport"]');
+			viewport.content = `width=${width}, initial-scale=${device.displayScaling}, maximum-scale=${device.displayScaling}, user-scalable=no, viewport-fit=cover`;
+			displayScaling = device.displayScaling;
+		}
+	});
 
-Tracker.autorun(() => {
-	const device = findDevice({displayTheme: 1});
-	if (device) {
-		document.documentElement.classList.toggle('theme-light', device.displayTheme === 'light');
-		document.documentElement.classList.toggle('theme-dark', device.displayTheme === 'dark');
-	}
+	Tracker.autorun(() => {
+		const device = findDevice({displayTheme: 1});
+		if (device) {
+			document.documentElement.classList.toggle('theme-light', device.displayTheme === 'light');
+			document.documentElement.classList.toggle('theme-dark', device.displayTheme === 'dark');
+		}
+	});
 });
 
 export const deviceReady = new Promise(resolve => {
-	if (storage.device) return resolve(storage.device);
+	Meteor.startup(() => {
+		if (storage.device) return resolve(storage.device);
 
-	Tracker.autorun(computation => {
-		const device = Devices.findOne(deviceId);
-		if (device) {
+		Tracker.autorun(computation => {
+			const device = Devices.findOne(deviceId);
+			if (!device) return;
 			computation.stop();
 			resolve(device);
-		}
+		});
 	});
 });
 

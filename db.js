@@ -1,3 +1,8 @@
+import { Meteor } from 'meteor/meteor';
 import { Mongo } from 'meteor/mongo';
 
-export const Devices = new Mongo.Collection('Devices');
+export let Devices;
+
+Meteor.startup(() => {
+	Devices = Mongo.getCollection('Devices');
+});
