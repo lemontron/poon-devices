@@ -38,7 +38,7 @@ let displayScaling = 1;
 Meteor.startup(() => {
 	Tracker.autorun(() => {
 		const device = findDevice({displayScaling: 1});
-		if (device.displayScaling && device.displayScaling !== displayScaling) {
+		if (device && device.displayScaling && device.displayScaling !== displayScaling) {
 			const width = Math.round(screen.width / device.displayScaling);
 			const viewport = document.querySelector('meta[name="viewport"]');
 			viewport.content = `width=${width}, initial-scale=${device.displayScaling}, maximum-scale=${device.displayScaling}, user-scalable=no, viewport-fit=cover`;
