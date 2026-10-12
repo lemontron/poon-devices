@@ -53,6 +53,7 @@ Meteor.startup(() => {
 			document.documentElement.classList.toggle('theme-dark', device.displayTheme === 'dark');
 		}
 	});
+
 });
 
 export const deviceReady = new Promise(resolve => {
