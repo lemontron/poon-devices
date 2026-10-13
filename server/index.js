@@ -1,8 +1,6 @@
 import './devices';
 import { createPublicKey, verify } from 'crypto';
 
-export { Devices } from '../db';
-
 // Server verify message is authentic
 export const verifyMessage = (publicKey, message, signature) => {
 	const ok = verify('sha256',

@@ -3,75 +3,44 @@ import { Random } from 'meteor/random';
 import { Tracker } from 'meteor/tracker';
 import { useTracker } from 'meteor/react-meteor-data';
 import { isPwa, storage } from 'meteor/poon';
-import { Devices } from './db';
 import { getPublicKeyAsync } from './device-keys';
+import { Mongo } from 'meteor/mongo';
 
 export const deviceId = (() => {
 	if (Meteor.isDevelopment && '__codexWebMcpModelContext' in window) return 'codex';
 	return localStorage.deviceId || (localStorage.deviceId = Random.id());
 })();
 
-const findDevice = (fields) => {
-	return Devices.findOne(deviceId, {fields}) || storage.device;
-};
-
-export const deviceRegistered = new Promise(resolve => {
-	Meteor.startup(async () => {
-		Meteor.subscribe('Device', {
-			deviceId,
-			'publicKey': await getPublicKeyAsync(),
-			'screenSize': {'width': screen.width, 'height': screen.height},
-			'locationUrl': location.href,
-			'isStandalone': isPwa,
-		}, () => {
-			resolve();
-			setInterval(async () => {
-				try {
-					await fetch(`/api/heartbeat/${deviceId}`);
-				} catch (err) {}
-			}, 10000);
-		});
+Meteor.startup(async () => { // hack
+	Meteor.subscribe('Device', {
+		'deviceId': deviceId,
+		'publicKey': await getPublicKeyAsync(),
+		'screenSize': {'width': screen.width, 'height': screen.height},
+		'locationUrl': location.href,
+		'isStandalone': isPwa,
+	}, () => {
+		setInterval(async () => {
+			try {
+				await fetch(`/api/heartbeat/${deviceId}`);
+			} catch (err) {}
+		}, 10000);
 	});
-});
-
-let displayScaling = 1;
-Meteor.startup(() => {
-	Tracker.autorun(() => {
-		const device = findDevice({displayScaling: 1});
-		if (device && device.displayScaling && device.displayScaling !== displayScaling) {
-			const width = Math.round(screen.width / device.displayScaling);
-			const viewport = document.querySelector('meta[name="viewport"]');
-			viewport.content = `width=${width}, initial-scale=${device.displayScaling}, maximum-scale=${device.displayScaling}, user-scalable=no, viewport-fit=cover`;
-			displayScaling = device.displayScaling;
-		}
-	});
-
-	Tracker.autorun(() => {
-		const device = findDevice({displayTheme: 1});
-		if (device) {
-			document.documentElement.classList.toggle('theme-light', device.displayTheme === 'light');
-			document.documentElement.classList.toggle('theme-dark', device.displayTheme === 'dark');
-		}
-	});
-
 });
 
 export const deviceReady = new Promise(resolve => {
-	Meteor.startup(() => {
-		if (storage.device) return resolve(storage.device);
-
-		Tracker.autorun(computation => {
-			const device = Devices.findOne(deviceId);
-			if (!device) return;
-			computation.stop();
-			resolve(device);
+	Meteor.startup(() => { // hack
+		Tracker.autorun(handle => {
+			const device = Mongo.getCollection('Devices').findOne(deviceId);
+			if (device) {
+				handle.stop();
+				resolve(device);
+			}
 		});
 	});
 });
 
 export const useDevice = () => useTracker(() => {
-	return findDevice();
+	return Mongo.getCollection('Devices').findOne(deviceId) || storage.device;
 }, []);
 
-export { Devices };
 export { signAsync } from './device-keys';

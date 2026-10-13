@@ -9,14 +9,18 @@ const keysReady = (async () => {
 	storage.publicKey = await crypto.subtle.exportKey('jwk', keys.publicKey);
 })();
 
+let signerPromise;
+const getSignerAsync = () => signerPromise || (signerPromise = keysReady.then(() =>
+	crypto.subtle.importKey('jwk', storage.privateKey, alg, false, ['sign'])
+));
+
 export const getPublicKeyAsync = async () => {
 	await keysReady;
 	return storage.publicKey;
 };
 
 export const signAsync = async message => {
-	await keysReady;
-	const signer = await crypto.subtle.importKey('jwk', storage.privateKey, alg, false, ['sign']);
+	const signer = await getSignerAsync();
 	const payload = new TextEncoder().encode(message);
 	const signature = await crypto.subtle.sign({'name': 'ECDSA', 'hash': 'SHA-256'}, signer, payload);
 	return btoa(String.fromCharCode(...new Uint8Array(signature)));

@@ -9,5 +9,5 @@ meteor add poon-devices
 ```
 
 ```javascript
-import { Devices, deviceId } from 'meteor/poon-devices';
+import { deviceId } from 'meteor/poon-devices';
 ```

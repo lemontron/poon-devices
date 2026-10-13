@@ -1,7 +1,6 @@
 import { Meteor } from 'meteor/meteor';
 import { Random } from 'meteor/random';
 import { check } from 'meteor/check';
-import { Devices } from '../db';
 import { generateDefaultDeviceName } from './device-name';
 import { getIpFromConnection } from './util';
 import { bumpHeartbeat } from './heartbeat';
@@ -21,7 +20,7 @@ Meteor.publish('Device', async function(d) {
 	this.connection.deviceId = d.deviceId;
 
 	const date = new Date();
-	await Devices.upsertAsync({'_id': d.deviceId}, {
+	await Mongo.getCollection('Devices').upsertAsync({'_id': d.deviceId}, {
 		$set: {
 			'userId': this.userId || undefined,
 			'updatedOn': date,
@@ -43,5 +42,5 @@ Meteor.publish('Device', async function(d) {
 	});
 	await bumpHeartbeat(d.deviceId, true);
 
-	return Devices.find(d.deviceId);
+	return Mongo.getCollection('Devices').find(d.deviceId);
 });
