@@ -7,6 +7,7 @@ Package.describe({
 Package.onUse(api => {
 	api.use('ecmascript');
 	api.use('meteor');
+	api.use('ddp-client', 'client');
 	api.use('modules');
 	api.use('mongo');
 	api.use('random');
@@ -17,5 +18,5 @@ Package.onUse(api => {
 	api.use('poon', 'client');
 	api.use('poon-api', 'server');
 	api.mainModule('client.js', 'client');
-	api.mainModule('server/index.js', 'server');
+	api.mainModule('server.js', 'server');
 });
