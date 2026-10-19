@@ -7,6 +7,7 @@ Meteor.startup(async () => {
 	const onlineDevices = await Mongo.getCollection('Devices').find({
 		'isOnline': true,
 		'isDevelopment': Meteor.isDevelopment,
+		'publicKey': {$exists: true},
 	}, {fields: {_id: 1}}).fetchAsync();
 	// console.log('init', onlineDevices.map(device => device._id));
 	for (let device of onlineDevices) {
