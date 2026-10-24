@@ -1,7 +1,6 @@
 import { Meteor } from 'meteor/meteor';
 import { Random } from 'meteor/random';
 import { Mongo } from 'meteor/mongo';
-import { storage } from 'meteor/poon';
 import { useTracker } from 'meteor/react-meteor-data';
 
 export const deviceId = (() => {
@@ -22,5 +21,5 @@ export const deviceReady = new Promise(resolve => {
 });
 
 export const useDevice = () => useTracker(() => {
-	return Mongo.getCollection('Devices').findOne(deviceId) || storage.device;
+	return Mongo.getCollection('Devices').findOne(deviceId);
 }, []);
