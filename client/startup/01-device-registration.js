@@ -4,8 +4,6 @@ import { isPwa, toast, memoize } from 'meteor/poon';
 import { getPublicKeyAsync, signAsync } from '../crypto';
 import { deviceId } from '../device';
 
-let deviceSubscription;
-
 const startHeartbeat = memoize(() => {
 	setInterval(async () => {
 		try {
@@ -14,14 +12,15 @@ const startHeartbeat = memoize(() => {
 	}, 10000);
 });
 
+let sub;
+
 DDP.onReconnect(connection => {
 	if (connection !== Meteor.connection) return;
-	if (deviceSubscription) deviceSubscription.stop();
-	deviceSubscription = undefined;
+	if (sub) sub.stop();
 });
 
 Meteor.connection.options.onConnected = async () => {
-	deviceSubscription = Meteor.subscribe('Device', {
+	sub = Meteor.subscribe('Device', {
 		'deviceId': deviceId,
 		'publicKey': await getPublicKeyAsync(),
 		'screenSize': {'width': screen.width, 'height': screen.height},

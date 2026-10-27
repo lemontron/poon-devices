@@ -8,18 +8,20 @@ export const deviceId = (() => {
 	return localStorage.deviceId || (localStorage.deviceId = Random.id());
 })();
 
+let device; // Makes device slightly more durable to survive reconnects
+
 export const deviceReady = new Promise(resolve => {
-	Meteor.startup(() => { // hack
-		Tracker.autorun(handle => {
-			const device = Mongo.getCollection('Devices').findOne(deviceId);
-			if (device) {
-				handle.stop();
+	Meteor.startup(() => {
+		Mongo.getCollection('Devices').find(deviceId).observe({
+			added: doc => {
+				device = doc;
 				resolve(device);
-			}
+			},
+			changed: doc => device = doc,
 		});
 	});
 });
 
 export const useDevice = () => useTracker(() => {
-	return Mongo.getCollection('Devices').findOne(deviceId);
-}, []);
+	return Mongo.getCollection('Devices').findOne(deviceId) || device;
+}, [deviceId, device]);
