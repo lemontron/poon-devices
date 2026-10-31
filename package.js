@@ -7,6 +7,7 @@ Package.describe({
 Package.onUse(api => {
 	api.use('ecmascript');
 	api.use('meteor');
+	api.use('localstorage', 'client');
 	api.use('ddp-client', 'client');
 	api.use('modules');
 	api.use('mongo');
