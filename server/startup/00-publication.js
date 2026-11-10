@@ -2,53 +2,67 @@ import { Meteor } from 'meteor/meteor';
 import { Random } from 'meteor/random';
 import { check } from 'meteor/check';
 import { generateDefaultDeviceName } from '../util-device-name';
-import { getIpFromConnection, verifyMessage } from '../util';
+import { getIpFromConnection, hashToken } from '../util';
 import { bumpHeartbeat } from './02-heartbeat';
 import { publishScreenViewers } from '../screen-sharing';
 
-Meteor.publish('Device', async function(d) {
-	check(d, {
-		deviceId: String,
-		publicKey: Object,
-		screenSize: Object,
-		locationUrl: String,
-		isStandalone: Boolean,
-		signature: String,
+const waitForDeviceAsync = (con) => {
+	if (con.deviceId) return con.deviceId;
+	return new Promise(resolve => {
+		con.setDeviceId = deviceId => {
+			con.deviceId = deviceId;
+			resolve(deviceId);
+			bumpHeartbeat(deviceId, true);
+		};
 	});
+};
 
-	if (d.deviceId === 'codex' && !Meteor.isDevelopment) throw new Meteor.Error('device', 'Device not authorized');
+Meteor.publish(null, async function() {
+	const deviceId = await waitForDeviceAsync(this.connection);
+	publishScreenViewers(this, deviceId);
+	return Mongo.getCollection('Devices').find(deviceId);
+});
 
-	const date = new Date();
-	const Devices = Mongo.getCollection('Devices');
+Meteor.methods({
+	'AuthenticateDevice': async function(d) {
+		check(d, {
+			deviceId: String,
+			screenSize: Object,
+			locationUrl: String,
+			isStandalone: Boolean,
+			resumeToken: String,
+		});
 
-	// Authenticate if device is already registered
-	const existing = await Devices.findOneAsync({'_id': d.deviceId});
-	if (existing?.publicKey) verifyMessage(existing.publicKey, this.connection.id, d.signature);
+		if (d.deviceId === 'codex' && !Meteor.isDevelopment) throw new Meteor.Error('device', 'Device not authorized');
 
-	this.connection.deviceId = d.deviceId;
-	await Devices.upsertAsync({'_id': d.deviceId}, {
-		$set: {
-			'userId': this.userId || undefined,
+		const date = new Date();
+		const doc = {
 			'updatedOn': date,
 			'activeOn': date,
-			'isDevelopment': Meteor.isDevelopment,
-			'userAgent': this.connection.httpHeaders['user-agent'],
+			'isOnline': true,
 			'screenSize': d.screenSize,
 			'locationUrl': d.locationUrl,
-			'ip': getIpFromConnection(this.connection),
 			'isStandalone': d.isStandalone,
-			'isOnline': true,
-			'publicKey': existing?.publicKey ? undefined : d.publicKey, // The ONLY legacy code in the repo
-		},
-		$setOnInsert: {
-			'addedOn': date,
-			'code': Random.id(5).toUpperCase(),
-			'name': generateDefaultDeviceName(d),
-		},
-	});
+			'userAgent': this.connection.httpHeaders['user-agent'],
+			'ip': getIpFromConnection(this.connection),
+			'isDevelopment': Meteor.isDevelopment,
+		};
 
-	await bumpHeartbeat(d.deviceId, true);
-	publishScreenViewers(this, d.deviceId);
-
-	return Devices.find(d.deviceId);
+		await Mongo.getCollection('Devices').upsertAsync({
+			'_id': d.deviceId,
+			'resumeTokenHash': hashToken(d.resumeToken),
+		}, {
+			$set: doc,
+			$setOnInsert: {
+				'userId': this.userId || undefined,
+				'addedOn': date,
+				'code': Random.id(5).toUpperCase(),
+				'name': generateDefaultDeviceName(doc),
+			},
+		}).catch(err => {
+			if (err.code === 11000) throw new Meteor.Error('device', 'Invalid device token');
+			throw err;
+		});
+		this.connection.setDeviceId(d.deviceId);
+	},
 });

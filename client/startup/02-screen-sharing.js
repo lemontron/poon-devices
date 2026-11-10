@@ -1,9 +1,8 @@
 import { Meteor } from 'meteor/meteor';
 import { Mongo } from 'meteor/mongo';
 import { Tracker } from 'meteor/tracker';
-import { loadScript } from 'meteor/poon';
+import { loadScript, storage } from 'meteor/poon';
 import { deviceId } from '../device';
-import { signAsync } from '../crypto';
 
 const ScreenViewers = new Mongo.Collection('ScreenViewers');
 
@@ -26,18 +25,10 @@ const stop = () => {
 const start = async viewerId => {
 	stop();
 	const currentGeneration = generation;
-	const [{record}, signature] = await Promise.all([
-		loadScript('https://cdn.jsdelivr.net/npm/@rrweb/record', 'rrwebRecord'),
-		signAsync(viewerId),
-	]);
+	const {record} = await loadScript('https://cdn.jsdelivr.net/npm/@rrweb/record', 'rrwebRecord');
 	if (currentGeneration !== generation) return;
 
-	const url = new URL(Meteor.absoluteUrl('api/live/socket'));
-	url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
-	url.searchParams.set('deviceId', deviceId);
-	url.searchParams.set('role', 'source');
-	url.searchParams.set('viewerId', viewerId);
-	url.searchParams.set('signature', signature);
+	const url = Meteor.absoluteUrl(`/api/live/socket?deviceId=${deviceId}&role=source&viewerId=${viewerId}&resumeToken=${storage.resumeToken}`).replace(/^http/, 'ws');
 	const connection = new WebSocket(url);
 	socket = connection;
 	connection.onopen = () => {

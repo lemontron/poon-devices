@@ -33,13 +33,11 @@ const getFormFactor = (screenSize = {}) => {
 	return 'Phone';
 };
 
-export const generateDefaultDeviceName = ({userAgent, screenSize, locationUrl}) => {
+export const generateDefaultDeviceName = ({userAgent, screenSize}) => {
 	const platform = getPlatformName(userAgent);
 	const browser = getBrowserName(userAgent);
 	const formFactor = getFormFactor(screenSize);
-	const location = normalize(locationUrl);
 
-	if (location.includes('/display')) return 'Display';
 	if (platform === 'iPad') return 'iPad';
 	if (platform === 'iPhone') return 'iPhone';
 	if (platform?.includes('Android') && formFactor) return formFactor === 'Phone' ? 'Android Phone' : 'Android Tablet';

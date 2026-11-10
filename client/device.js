@@ -4,12 +4,12 @@ import { Mongo } from 'meteor/mongo';
 import { useTracker } from 'meteor/react-meteor-data';
 
 export const deviceId = (() => {
+	if (!Meteor._localStorage.getItem('resumeToken')) {
+		Meteor._localStorage.setItem('resumeToken', Random.secret());
+		Meteor._localStorage.setItem('deviceId', Random.id());
+	}
 	if (Meteor.isDevelopment && '__codexWebMcpModelContext' in window) return 'codex';
-	const storedId = Meteor._localStorage.getItem('deviceId');
-	if (storedId) return storedId;
-	const id = Random.id();
-	Meteor._localStorage.setItem('deviceId', id);
-	return id;
+	return Meteor._localStorage.getItem('deviceId');
 })();
 
 let device; // Makes device slightly more durable to survive reconnects

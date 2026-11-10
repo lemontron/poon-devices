@@ -7,7 +7,7 @@ Meteor.startup(async () => {
 	const onlineDevices = await Mongo.getCollection('Devices').find({
 		'isOnline': true,
 		'isDevelopment': Meteor.isDevelopment,
-		'publicKey': {$exists: true},
+		'resumeTokenHash': {$exists: true},
 	}, {fields: {_id: 1}}).fetchAsync();
 	// console.log('init', onlineDevices.map(device => device._id));
 	for (let device of onlineDevices) {
@@ -23,7 +23,12 @@ api.get('/heartbeat/:device', async (req, res) => {
 const setIsOnlineAsync = (deviceId, isOnline) => Mongo.getCollection('Devices').updateAsync({
 	'_id': deviceId,
 	'isOnline': !isOnline,
-}, {$set: {'isOnline': isOnline}});
+}, {
+	$set: {
+		'isOnline': isOnline,
+		...(isOnline ? {} : {'activeOn': new Date(Date.now() - 5000)}),
+	},
+});
 
 export const bumpHeartbeat = async (deviceId, isInitial) => {
 	clearTimeout(timers[deviceId]);

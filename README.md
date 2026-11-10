@@ -12,9 +12,14 @@ meteor add poon-devices
 import { deviceId } from 'meteor/poon-devices';
 ```
 
+Devices keep a random token in local storage. `AuthenticateDevice` runs from
+`DDP.onReconnect` before subscriptions replay, verifying the stored token hash
+for an existing device or inserting a new device. Losing the token creates a
+new device identity that must be paired again.
+
 Screen sharing uses `/api/live/socket` and publishes one `ScreenViewers` document
-per viewer through the authenticated `Device` subscription. The device opens a
-signed recording socket only while viewers are present; new viewers receive a
+per viewer through the authenticated unnamed device publication. The device opens a
+token-authenticated recording socket only while viewers are present; new viewers receive a
 fresh snapshot, and the last departure stops sharing.
 
 Server code must register its permission check with

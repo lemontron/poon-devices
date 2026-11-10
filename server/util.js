@@ -1,5 +1,6 @@
-import { Meteor } from 'meteor/meteor';
-import { createPublicKey, verify } from 'crypto';
+import { createHash } from 'crypto';
+
+export const hashToken = token => createHash('sha256').update(token).digest('hex');
 
 export const getIpFromConnection = connection => {
 	const headers = connection.httpHeaders;
@@ -7,10 +8,3 @@ export const getIpFromConnection = connection => {
 	if (rawIp) return rawIp.split(',')[0];
 };
 
-export const verifyMessage = (publicKey, message, signature) => {
-	const ok = verify('sha256', Buffer.from(message),
-		{'key': createPublicKey({'key': publicKey, 'format': 'jwk'}), 'dsaEncoding': 'ieee-p1363'},
-		Buffer.from(signature, 'base64'),
-	);
-	if (!ok) throw new Meteor.Error('peer', 'Invalid signature');
-};

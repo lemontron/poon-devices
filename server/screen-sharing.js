@@ -1,5 +1,5 @@
 import { Mongo } from 'meteor/mongo';
-import { verifyMessage } from './util';
+import { hashToken } from './util';
 
 export const screenRelays = new Map();
 
@@ -39,7 +39,11 @@ export const authorizeSourceAsync = async params => {
 	const viewerId = params.get('viewerId');
 	const relay = screenRelays.get(deviceId);
 	if (!relay || !relay.viewers.has(viewerId)) return false;
-	const device = await Mongo.getCollection('Devices').findOneAsync(deviceId);
-	verifyMessage(device.publicKey, viewerId, params.get('signature'));
-	return true;
+	const resumeToken = params.get('resumeToken');
+	if (!resumeToken) return false;
+	const device = await Mongo.getCollection('Devices').findOneAsync({
+		'_id': deviceId,
+		'resumeTokenHash': hashToken(resumeToken),
+	});
+	return Boolean(device);
 };
