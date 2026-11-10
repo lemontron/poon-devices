@@ -43,7 +43,7 @@ export const authorizeSourceAsync = async params => {
 	if (!resumeToken) return false;
 	const device = await Mongo.getCollection('Devices').findOneAsync({
 		'_id': deviceId,
-		'resumeTokenHash': hashToken(resumeToken),
+		'hashedResumeToken': hashToken(resumeToken),
 	});
 	return Boolean(device);
 };

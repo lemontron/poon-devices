@@ -35,6 +35,8 @@ Meteor.methods({
 
 		if (d.deviceId === 'codex' && !Meteor.isDevelopment) throw new Meteor.Error('device', 'Device not authorized');
 
+		const Devices = Mongo.getCollection('Devices');
+
 		const date = new Date();
 		const doc = {
 			'updatedOn': date,
@@ -48,21 +50,27 @@ Meteor.methods({
 			'isDevelopment': Meteor.isDevelopment,
 		};
 
-		await Mongo.getCollection('Devices').upsertAsync({
-			'_id': d.deviceId,
-			'resumeTokenHash': hashToken(d.resumeToken),
-		}, {
-			$set: doc,
-			$setOnInsert: {
+		const existing = await Devices.findOneAsync(d.deviceId);
+		if (existing && existing.hashedResumeToken) { // Authenticate Resume Token
+			if (existing.hashedResumeToken !== hashToken(d.resumeToken)) {
+				throw new Meteor.Error('device', 'Invalid resume token');
+			}
+			await Devices.updateAsync(existing._id, {$set: doc});
+		} else if (existing) { // Migration
+			await Devices.updateAsync(existing._id, {
+				$set: {...doc, 'hashedResumeToken': hashToken(d.resumeToken)},
+			});
+		} else {
+			await Devices.insertAsync({
+				'_id': d.deviceId,
+				...doc,
 				'userId': this.userId || undefined,
+				'hashedResumeToken': hashToken(d.resumeToken),
 				'addedOn': date,
 				'code': Random.id(5).toUpperCase(),
 				'name': generateDefaultDeviceName(doc),
-			},
-		}).catch(err => {
-			if (err.code === 11000) throw new Meteor.Error('device', 'Invalid device token');
-			throw err;
-		});
+			});
+		}
 		this.connection.setDeviceId(d.deviceId);
 	},
 });

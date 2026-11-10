@@ -14,8 +14,10 @@ import { deviceId } from 'meteor/poon-devices';
 
 Devices keep a random token in local storage. `AuthenticateDevice` runs from
 `DDP.onReconnect` before subscriptions replay, verifying the stored token hash
-for an existing device or inserting a new device. Losing the token creates a
-new device identity that must be paired again.
+for an existing device or inserting a new device. During migration, existing
+devices without a token hash accept and save the first presented token while
+keeping their device ID, pairing, and settings. Subsequent connections must
+match that token. Losing a saved token requires resetting and pairing the device again.
 
 Screen sharing uses `/api/live/socket` and publishes one `ScreenViewers` document
 per viewer through the authenticated unnamed device publication. The device opens a

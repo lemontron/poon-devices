@@ -1,6 +1,6 @@
 import { Meteor } from 'meteor/meteor';
 import { DDP } from 'meteor/ddp-client';
-import { isPwa, toast, memoize } from 'meteor/poon';
+import { Storage, isPwa, toast, memoize } from 'meteor/poon';
 import { deviceId } from '../device';
 
 const startHeartbeat = memoize(() => {
@@ -18,8 +18,8 @@ DDP.onReconnect(connection => {
 		'screenSize': {'width': screen.width, 'height': screen.height},
 		'locationUrl': location.href,
 		'isStandalone': isPwa,
-		'resumeToken': Meteor._localStorage.getItem('resumeToken'),
-	}, err => {
+		'resumeToken': Storage.resumeToken,
+	}, (err) => {
 		if (err) return toast(err.reason);
 		startHeartbeat();
 	});

@@ -1,7 +1,7 @@
 import { Meteor } from 'meteor/meteor';
 import { Mongo } from 'meteor/mongo';
 import { Tracker } from 'meteor/tracker';
-import { loadScript, storage } from 'meteor/poon';
+import { loadScript, Storage } from 'meteor/poon';
 import { deviceId } from '../device';
 
 const ScreenViewers = new Mongo.Collection('ScreenViewers');
@@ -28,7 +28,7 @@ const start = async viewerId => {
 	const {record} = await loadScript('https://cdn.jsdelivr.net/npm/@rrweb/record', 'rrwebRecord');
 	if (currentGeneration !== generation) return;
 
-	const url = Meteor.absoluteUrl(`/api/live/socket?deviceId=${deviceId}&role=source&viewerId=${viewerId}&resumeToken=${storage.resumeToken}`).replace(/^http/, 'ws');
+	const url = Meteor.absoluteUrl(`/api/live/socket?deviceId=${deviceId}&role=source&viewerId=${viewerId}&resumeToken=${Storage.resumeToken}`).replace(/^http/, 'ws');
 	const connection = new WebSocket(url);
 	socket = connection;
 	connection.onopen = () => {

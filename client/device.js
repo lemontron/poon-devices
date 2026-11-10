@@ -2,14 +2,12 @@ import { Meteor } from 'meteor/meteor';
 import { Random } from 'meteor/random';
 import { Mongo } from 'meteor/mongo';
 import { useTracker } from 'meteor/react-meteor-data';
+import { Storage } from 'meteor/poon';
 
 export const deviceId = (() => {
-	if (!Meteor._localStorage.getItem('resumeToken')) {
-		Meteor._localStorage.setItem('resumeToken', Random.secret());
-		Meteor._localStorage.setItem('deviceId', Random.id());
-	}
+	Storage.resumeToken ||= Random.secret();
 	if (Meteor.isDevelopment && '__codexWebMcpModelContext' in window) return 'codex';
-	return Meteor._localStorage.getItem('deviceId');
+	return Storage.deviceId ||= Random.id();
 })();
 
 let device; // Makes device slightly more durable to survive reconnects
